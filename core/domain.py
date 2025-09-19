@@ -11,7 +11,7 @@ class Building:                     #Корпус
 @dataclass(frozen=True)
 class Room:                         #Аудитория
     id: str                         #Идентификатор аудитории
-    building_id: int                #Идентификатор корпуса, в котором находится аудитория
+    building_id: str                #Идентификатор корпуса, в котором находится аудитория
     name: str                       #Наименование (или номер) аудитории
     capacity: int                   #Количество мест
     features: tuple[str, ...]       #Особенности (например: projector, lab, accessibility)
