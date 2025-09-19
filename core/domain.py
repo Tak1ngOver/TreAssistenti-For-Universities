@@ -51,4 +51,4 @@ class Class:                        #Пара
 class Constraint:                   #Ограничение
     id: str                         #Идентификатор ограничения
     kind: str                       #Тип ограничения (например: max windows per day, preferred buildings и т.п.) 
-    payload: dict                   #Дополнительные сведения (например: {"teacher_id": "T01"})
+    payload: dict                   #Дополнительные сведения (например: "teacher_id": "T01")
