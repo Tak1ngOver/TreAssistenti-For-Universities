@@ -23,6 +23,13 @@ class Teacher:                      #Преподаватель
     dept: str                       #Кафедра, к которой относится преподаватель
 
 @dataclass(frozen=True)
+class Group:                        #Группа
+    id: str                         #Идентификатор группы
+    name: str                       #Наименование группы
+    size: int                       #Количество студентов в группе
+    track: str                      #Учебное направление
+
+@dataclass(frozen=True)
 class Course:                       #Дисциплина
     id: str                         #Идентификатор дисциплины
     code: str                       #Код дисциплины
