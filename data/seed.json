@@ -1,0 +1,97 @@
+{
+    "buildings": [
+        {"id":"B01", "name":"Большой корпус"}, 
+        {"id":"B02", "name":"Юридический корпус"}
+    ],
+    "rooms": [
+        {"id":"LEC01", "building_id":"B01", "name":"301", "capacity":"100", "features": ["projector", "accessibilty", "lectoruim"]},
+        {"id":"LEC02", "building_id":"B01", "name":"303", "capacity":"120", "features": ["projector", "lectoruim"]},
+        {"id":"LEC03", "building_id":"B02", "name":"201", "capacity":"120", "features": ["projector", "lectoruim"]},
+
+        {"id":"R01", "building_id":"B01", "name":"101", "capacity":"30", "features": ["none"]},
+        {"id":"R02", "building_id":"B01", "name":"102", "capacity":"80", "features": ["gym"]},
+        {"id":"R03", "building_id":"B01", "name":"201", "capacity":"18", "features": ["lab"]},
+        {"id":"R04", "building_id":"B01", "name":"202", "capacity":"45", "features": ["projector"]},
+        {"id":"R05", "building_id":"B01", "name":"203", "capacity":"24", "features": ["none"]},
+        {"id":"R06", "building_id":"B01", "name":"204", "capacity":"18", "features": ["lab"]},
+        {"id":"R07", "building_id":"B01", "name":"301A", "capacity":"15", "features": ["none"]},
+        {"id":"R08", "building_id":"B01", "name":"302", "capacity":"25", "features": ["accessibilty", "projector"]},
+        {"id":"R09", "building_id":"B01", "name":"304", "capacity":"35", "features": ["projector"]},
+        {"id":"R10", "building_id":"B01", "name":"305", "capacity":"20", "features": ["computer"]},
+        {"id":"R11", "building_id":"B01", "name":"306", "capacity":"28", "features": ["none"]},
+
+        {"id":"R12", "building_id":"B02", "name":"101", "capacity":"15", "features": ["lab"]},
+        {"id":"R13", "building_id":"B02", "name":"102", "capacity":"25", "features": ["projector"]},
+        {"id":"R14", "building_id":"B02", "name":"103", "capacity":"24", "features": ["projector", "accessibilty"]},
+        {"id":"R15", "building_id":"B02", "name":"104", "capacity":"12", "features": ["computer"]},
+        {"id":"R16", "building_id":"B02", "name":"202", "capacity":"30", "features": ["projector"]},
+        {"id":"R17", "building_id":"B02", "name":"203", "capacity":"25", "features": ["projector"]},
+        {"id":"R18", "building_id":"B02", "name":"204", "capacity":"35", "features": ["projector"]}
+    ],
+
+    "teachers":[
+        {"id":"T01", "name":"Дик Гамшу", "dept":"Физическая культура"},
+        {"id":"T02", "name":"Феникс Райт", "dept":"Юриспруденция"},
+        {"id":"T03", "name":"Эма Скай", "dept": "Естественные науки"},
+        {"id":"T04", "name":"Афина Сайкс", "dept": "Общественные дисциплины"},
+        {"id": "T05", "name":"Майя Фей", "dept": "Общественные дисциплины"},
+        {"id": "T06", "name": "Аполло Джастис", "dept": "Юриспруденция"},
+        {"id":"T07", "name": "Марвин Гроссберг", "dept": "Юриспруденция"},
+        {"id": "T08", "name": "Ларри Батц", "dept": "Искусства"},
+        {"id": "T09", "name": "Уилл Пауэрс", "dept": "Искусства"},
+        {"id": "T10", "name": "Лиза Базил", "dept": "Информационные технологии"},
+        {"id": "T11", "name": "Лотта Харт", "dept": "Искусства"},
+        {"id": "T12", "name": "Редд Уайт", "dept": "Экономика и менеджмент"}
+    ],
+
+    "courses":[
+        {"code": "PE101", "title":"Физическая культура", "dept":"Физическая культура", "hours_per_week":4, "needs":["gym"]},
+        {"code": "EC101", "title": "Экономика и менеджмент", "dept":"Экономика и менеджмент", "hours_per_week": 4, "needs":["none"]},
+        {"code": "PS101", "title": "Психология", "dept":"Общественные дисциплины", "hours_per_week": 4, "needs":["accessibility"]},
+        {"code": "GD101", "title": "Теология и спиритизм", "dept":"Общественные дисциплины", "hours_per_week": 4, "needs":["accessibility"]},
+        {"code": "IT101", "title": "Информационно-коммуникационные техналоги", "dept":"Информационные технологии", "hours_per_week": 4, "needs":["computer"]},
+        {"code": "PH101", "title": "Фотография", "dept":"Искусства", "hours_per_week": 4, "needs":["lab"]},
+        {"code": "CH101", "title": "Химия", "dept":"Естественные науки", "hours_per_week": 4, "needs":["lab"]},
+        {"code": "ART256", "title": "Искусство", "dept":"Искусства", "hours_per_week": 4, "needs":["none"]},
+        {"code": "ART228", "title": "Актёрское мастерство", "dept":"Искусства", "hours_per_week": 4},
+        {"code": "LGL101", "title": "Введение в юриспруденцию", "dept":"Юриспруденция", "hours_per_week": 4},
+        {"code": "LGL473", "title": "Уголовное право", "dept":"Юриспруденция", "hours_per_week": 4},
+        {"code": "LGL006", "title": "Гражданский процесс", "dept":"Юриспруденция", "hours_per_week": 4}
+    ],
+
+    "groups":[
+        {"id":"G01", "name":"Юристы 1", "size":18, "track":"Юриспруденция"},
+        {"id":"G02", "name":"Юристы 2", "size":12, "track":"Юриспруденция"},
+        {"id":"G03", "name":"Юристы 3", "size":15, "track":"Юриспруденция"},
+        {"id":"G04", "name":"Юристы 4", "size":18, "track":"Юриспруденция"},
+        {"id":"G05", "name":"Юристы (сокр.)", "size":5, "track":"Юриспруденция"},
+        {"id":"G0105", "name": "Поток юристов", "size":68, "track": "Юриспруденция"},
+        {"id":"G06", "name":"Артисты 1", "size":14, "track":"Смешанные искусства"},
+        {"id":"G07", "name":"Артисты 2", "size":18, "track":"Смешанные искусства"},
+        {"id":"G08", "name":"Артисты (сокр.)", "size":7,"track":"Смешанные искусства"},
+        {"id":"G0608", "name":"Поток артистов", "size":39,"track":"Смешанные искусства"}
+    ],
+    "classes":[
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},        
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""},
+        {"id":"", "course_id":"", "needs":"", "teacher_id":"", "group_id":"", "slot_id":"", "room_id":"", "status":""}  
+    ]
+}
