@@ -72,22 +72,22 @@
         {"id":"TUE5", "day":"tuesday", "start":"16:00", "end":"18:00"},
 
         {"id":"WED1", "day":"wednesday", "start":"8:00", "end":"10:00"},
-        {"id":"WED1", "day":"wednesday", "start":"10:00", "end":"12:00"},
-        {"id":"WED1", "day":"wednesday", "start":"12:00", "end":"14:00"},
-        {"id":"WED1", "day":"wednesday", "start":"14:00", "end":"16:00"},
-        {"id":"WED1", "day":"wednesday", "start":"16:00", "end":"18:00"},
+        {"id":"WED2", "day":"wednesday", "start":"10:00", "end":"12:00"},
+        {"id":"WED3", "day":"wednesday", "start":"12:00", "end":"14:00"},
+        {"id":"WED4", "day":"wednesday", "start":"14:00", "end":"16:00"},
+        {"id":"WED5", "day":"wednesday", "start":"16:00", "end":"18:00"},
 
         {"id":"THU1", "day":"thursday", "start":"8:00", "end":"10:00"},
-        {"id":"THU1", "day":"thursday", "start":"10:00", "end":"12:00"},
-        {"id":"THU1", "day":"thursday", "start":"12:00", "end":"14:00"},
-        {"id":"THU1", "day":"thursday", "start":"14:00", "end":"16:00"},
-        {"id":"THU1", "day":"thursday", "start":"16:00", "end":"18:00"},
+        {"id":"THU2", "day":"thursday", "start":"10:00", "end":"12:00"},
+        {"id":"THU3", "day":"thursday", "start":"12:00", "end":"14:00"},
+        {"id":"THU4", "day":"thursday", "start":"14:00", "end":"16:00"},
+        {"id":"THU5", "day":"thursday", "start":"16:00", "end":"18:00"},
 
         {"id":"FRI1", "day":"friday", "start":"8:00", "end":"10:00"},
-        {"id":"FRI1", "day":"friday", "start":"10:00", "end":"12:00"},
-        {"id":"FRI1", "day":"friday", "start":"12:00", "end":"14:00"},
-        {"id":"FRI1", "day":"friday", "start":"14:00", "end":"16:00"},
-        {"id":"FRI1", "day":"friday", "start":"16:00", "end":"18:00"}
+        {"id":"FRI2", "day":"friday", "start":"10:00", "end":"12:00"},
+        {"id":"FRI3", "day":"friday", "start":"12:00", "end":"14:00"},
+        {"id":"FRI4", "day":"friday", "start":"14:00", "end":"16:00"},
+        {"id":"FRI5", "day":"friday", "start":"16:00", "end":"18:00"}
 
     ],
     "groups":[
