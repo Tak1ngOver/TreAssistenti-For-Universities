@@ -58,7 +58,13 @@ def assign_slot(classes: tuple[Class,...], class_id:str, new_slot_id:str) -> tup
     return new_classes + (updated_class,)
 
 def map_groups(groups: tuple[Group,...], f: Callable[[Group], Group]) -> tuple[Group,...]:
-    pass #Пока непонятно, что требуется от данной функции.
+    new_groups = []
+    for g in groups:
+        mapped_group = f(g)
+        new_groups.append(mapped_group)
+    return tuple(new_groups)
+
+  # return (f(g) for g in groups)
 
 def total_room_capacity(rooms: tuple[Room,...]) -> int:
     capacities = map(lambda r: r.capacity, rooms)
