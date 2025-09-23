@@ -23,6 +23,7 @@ def load_seed(path: str) -> tuple[
     slots = to_tuple(Slot, data.get("slots", []))
     classes = to_tuple(Class, data.get("classes", []))
     constraints = to_tuple(Constraint, data.get("constraints", []))
+    f.close()
     return buildings, rooms, teachers, groups, courses, slots, classes, constraints
 
 def add_class(classes: tuple[Class,...], c: Class) -> tuple[Class,...]:
