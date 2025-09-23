@@ -33,11 +33,7 @@ async def load_seed():
     state["constraints"] = constraints
 
     return {
-        "status": "ok",
-        "buildings": len(buildings),
-        "rooms": len(rooms),
-        "groups": len(groups),
-        "teachers": len(teachers),
+        "status": "ok"
     }
 
 

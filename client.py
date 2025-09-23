@@ -38,60 +38,17 @@ def main_page(page: ft.Page):
     )
     section_content = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
 
-    sidebar_open = True
-
-    def toggle_sidebar():
-        nonlocal sidebar_open
-        sidebar_open = not sidebar_open
-        sidebar_container.width = 200 if sidebar_open else 50
-
-        for btn, label, icon in zip(sidebar_buttons, MENU, MENU_ICONS):
-            btn.content = ft.Row(
-                [
-                    ft.Icon(icon, size=22),
-                    ft.Text(label, size=14) if sidebar_open else ft.Container(width=0),
-                ],
-                alignment=ft.MainAxisAlignment.START,
-                spacing=10,
-            )
-        page.update()
-
-    toggle_btn = ft.IconButton(
-        icon=ft.Icons.MENU,
-        icon_color=ft.Colors.BLACK87,
-        on_click=lambda e: toggle_sidebar(),
+    popup = ft.PopupMenuButton(items=[
+            ft.PopupMenuItem(icon= MENU_ICONS[0], text=MENU[0], on_click=lambda _: switch_section(MENU[0])),
+            ft.PopupMenuItem(icon= MENU_ICONS[1], text=MENU[1], on_click=lambda _: switch_section(MENU[1])),
+            ft.PopupMenuItem(icon= MENU_ICONS[2], text=MENU[2], on_click=lambda _: switch_section(MENU[2])),
+            ft.PopupMenuItem(icon= MENU_ICONS[3], text=MENU[3], on_click=lambda _: switch_section(MENU[3])),
+            ft.PopupMenuItem(icon= MENU_ICONS[4], text=MENU[4], on_click=lambda _: switch_section(MENU[4])),
+            ft.PopupMenuItem(icon= MENU_ICONS[5], text=MENU[5], on_click=lambda _: switch_section(MENU[5])),
+            ft.PopupMenuItem(icon= MENU_ICONS[6], text=MENU[6], on_click=lambda _: switch_section(MENU[6])),
+            ft.PopupMenuItem(icon= MENU_ICONS[7], text=MENU[7], on_click=lambda _: switch_section(MENU[7]))
+        ]
     )
-
-    sidebar_buttons = []
-    for label, icon in zip(MENU, MENU_ICONS):
-        btn = ft.ElevatedButton(
-            content=ft.Row(
-                [ft.Icon(icon, size=24), ft.Text(label, size=14)],
-                alignment=ft.MainAxisAlignment.START,
-                spacing=10,
-            ),
-            bgcolor=ft.Colors.BLUE_400,
-            color=ft.Colors.BLACK87,
-            width=180,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5)),
-            on_click=lambda e, name=label: switch_section(name),
-        )
-        sidebar_buttons.append(btn)
-
-    sidebar_column = ft.Column(
-        [toggle_btn, *sidebar_buttons],
-        spacing=10,
-        horizontal_alignment=ft.CrossAxisAlignment.START,
-    )
-
-    sidebar_container = ft.Container(
-        content=sidebar_column,
-        width=200,
-        bgcolor=ft.Colors.WHITE,
-        padding=10,
-        animate=ft.Animation(duration=300, curve=ft.AnimationCurve.EASE_IN_OUT),
-    )
-
     main_content_container = ft.Container(
         content=ft.Column(
             [section_name, section_content],
@@ -100,14 +57,13 @@ def main_page(page: ft.Page):
             expand=True,
         ),
         expand=True,
-        padding=20,
-        animate=ft.Animation(duration=300, curve=ft.AnimationCurve.EASE_IN_OUT),
+        padding=20
     )
 
 
     page.add(
         ft.Row(
-            [sidebar_container, main_content_container],
+            [popup, main_content_container],
             expand=True,
             spacing=0,
             vertical_alignment=ft.CrossAxisAlignment.START,
