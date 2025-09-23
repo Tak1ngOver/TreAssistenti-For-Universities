@@ -65,8 +65,6 @@ def map_groups(groups: tuple[Group,...], f: Callable[[Group], Group]) -> tuple[G
         new_groups.append(mapped_group)
     return tuple(new_groups)
 
-  # return (f(g) for g in groups)
-
 def total_room_capacity(rooms: tuple[Room,...]) -> int:
     if not rooms:
         return 0
