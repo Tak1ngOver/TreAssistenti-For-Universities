@@ -67,6 +67,8 @@ def map_groups(groups: tuple[Group,...], f: Callable[[Group], Group]) -> tuple[G
   # return (f(g) for g in groups)
 
 def total_room_capacity(rooms: tuple[Room,...]) -> int:
+    if not rooms:
+        return 0
     capacities = map(lambda r: r.capacity, rooms)
     sum = reduce(lambda a, b: a + b, capacities)
     return int(sum)

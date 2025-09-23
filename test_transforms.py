@@ -1,6 +1,6 @@
 import pytest
-from core.domain import Class, Group
-from core.transforms import add_class, assign_room, assign_slot, map_groups
+from core.domain import Class, Group, Room
+from core.transforms import add_class, assign_room, assign_slot, map_groups, total_room_capacity
 
 #Тесты функции add_class
 def test_add_class_to_empty_list():
@@ -200,3 +200,89 @@ def test_map_groups_plus_ten():
     assert result[0].id == group1.id
     assert result[0].name == group1.name
     assert result[0].track == group1.track
+
+def test_map_groups_if():
+    group1 = Group(
+        id="G01",
+        name="Юристы 1",
+        size=18,
+        track="Юриспруденция"
+    )
+    group2 = Group(
+        id="G0105",
+        name="Поток юристов",
+        size=68,
+        track="Юриспруденция"
+    )
+    group3 = Group(
+        id="G06",
+        name="Артисты 1",
+        size=14,
+        track="Смешанные искусства"
+    )
+    group4 = Group(
+        id="G0608",
+        name="Поток артистов",
+        size=39,
+        track="Смешанные искусства"
+    )
+    groups = (group1, group2, group3, group4)
+
+    def change_size(group: Group) -> Group:
+        if group.size < 20:
+            return Group(
+                id=group.id,
+                name=group.name,
+                size=group.size + 5,
+                track=group.track
+            )
+        else:
+            return Group(
+                id=group.id,
+                name=group.name,
+                size=group.size - 5,
+                track=group.track
+            )
+    result = map_groups(groups, change_size)
+    assert len(result) == 4
+    assert result[0].size == 23
+    assert result[1].size == 63
+    assert result[2].size == 19
+    assert result[3].size == 34
+    assert result[0].id == group1.id
+    assert result[0].name == group1.name
+    assert result[0].track == group1.track
+
+#Тесты функции total_room_capacity
+def test_total_room_capacity():
+    room1 = Room(
+        id="R01",
+        building_id="B01",
+        name="101",
+        capacity=30,
+        features=["none"]
+    )
+    room2 = Room(
+        id="R02",
+        building_id="B01",
+        name="102",
+        capacity=80,
+        features=["gym"]
+    )
+    room3 = Room(
+        id="R03",
+        building_id="B01",
+        name="201",
+        capacity=18,
+        features=["lab"]
+    )
+    rooms = (room1, room2, room3)
+    result = total_room_capacity(rooms)
+    assert isinstance(result, int)
+    assert result == 128
+
+def test_total_room_capacity_no_rooms():
+    rooms = ()
+    result = total_room_capacity(rooms)
+    assert isinstance(result, int)
+    assert result == 0
