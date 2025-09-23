@@ -34,7 +34,7 @@ def assign_room(classes: tuple[Class,...], class_id:str, new_room_id:str) -> tup
     check_room = lambda c: True if c.id == class_id else False
     no_room = lambda c: False if c.id == class_id else True
     needed_class = tuple(filter(check_room, classes))
-    if(len(tuple(needed_class)) != 1):
+    if(len(needed_class) != 1):
         print("Ошибка в данных: несколько занятий с указанным ID")
         return classes
     for i in needed_class:
@@ -47,10 +47,6 @@ def assign_slot(classes: tuple[Class,...], class_id:str, new_slot_id:str) -> tup
     no_room = lambda c: False if c.id == class_id else True
     needed_class = tuple(filter(check_room, classes))
     if(len(needed_class) != 1):
-        print("Ошибка в данных: несколько занятий с указанным ID")
-        return classes
-    needed_class = tuple(filter(check_room, classes))
-    if(len(tuple(needed_class)) != 1):
         print("Ошибка в данных: несколько занятий с указанным ID")
         return classes
     for i in needed_class:
