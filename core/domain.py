@@ -34,13 +34,12 @@ class Course:                       #Дисциплина
     code: str                       #Код дисциплины
     title: str                      #Наименование дисциплины
     dept: str                       #Кафедра, к которой относится дисциплина
-    hours_per_week: int             #Количество часов в неделю
+    hours_per_week: int             #Количество часо в в неделю
 
 @dataclass(frozen=True)
 class Slot:                         #Слот (место в расписании)
     id: str                         #Идентификатор слота
     day: str                        #День недели
-    day_id: int                     #Численное представление дня недели
     start: str                      #Начало пары
     end: str                        #Конец пары
 
