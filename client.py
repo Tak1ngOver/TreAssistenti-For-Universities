@@ -1,5 +1,7 @@
+# client.py
 import flet as ft
 import httpx
+from typing import Optional
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -25,11 +27,11 @@ MENU_ICONS = [
     ft.Icons.INFO,
 ]
 
-state = {}
+state = {}  # тут будут ключи: buildings, rooms, teachers, groups, courses, slots, classes, constraints
 
 
 def main_page(page: ft.Page):
-    page.title = "Расписание"
+    page.title = "Планировщик — Расписание"
     page.bgcolor = ft.Colors.WHITE
     page.scroll = ft.ScrollMode.AUTO
 
@@ -38,17 +40,13 @@ def main_page(page: ft.Page):
     )
     section_content = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
 
-    popup = ft.PopupMenuButton(items=[
-            ft.PopupMenuItem(icon= MENU_ICONS[0], text=MENU[0], on_click=lambda _: switch_section(MENU[0])),
-            ft.PopupMenuItem(icon= MENU_ICONS[1], text=MENU[1], on_click=lambda _: switch_section(MENU[1])),
-            ft.PopupMenuItem(icon= MENU_ICONS[2], text=MENU[2], on_click=lambda _: switch_section(MENU[2])),
-            ft.PopupMenuItem(icon= MENU_ICONS[3], text=MENU[3], on_click=lambda _: switch_section(MENU[3])),
-            ft.PopupMenuItem(icon= MENU_ICONS[4], text=MENU[4], on_click=lambda _: switch_section(MENU[4])),
-            ft.PopupMenuItem(icon= MENU_ICONS[5], text=MENU[5], on_click=lambda _: switch_section(MENU[5])),
-            ft.PopupMenuItem(icon= MENU_ICONS[6], text=MENU[6], on_click=lambda _: switch_section(MENU[6])),
-            ft.PopupMenuItem(icon= MENU_ICONS[7], text=MENU[7], on_click=lambda _: switch_section(MENU[7]))
+    popup = ft.PopupMenuButton(
+        items=[
+            ft.PopupMenuItem(icon=MENU_ICONS[i], text=MENU[i], on_click=lambda e, n=MENU[i]: switch_section(n))
+            for i in range(len(MENU))
         ]
     )
+
     main_content_container = ft.Container(
         content=ft.Column(
             [section_name, section_content],
@@ -57,9 +55,8 @@ def main_page(page: ft.Page):
             expand=True,
         ),
         expand=True,
-        padding=20
+        padding=20,
     )
-
 
     page.add(
         ft.Row(
@@ -69,6 +66,10 @@ def main_page(page: ft.Page):
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
     )
+
+    # ---------------------- helpers for mapping ids -> names ----------------------
+    def map_by_id(items, id_field="id", name_field="name"):
+        return {it[id_field]: it[name_field] for it in items}
 
     def switch_section(name: str):
         section_name.value = name
@@ -82,20 +83,19 @@ def main_page(page: ft.Page):
             show_data_section()
         elif section_name.value == "About":
             section_content.controls.append(
-            ft.Text(
-                    "Это проект программы, помогающей составлять расписание для университетов.\n\nАвторы:\nАлуа Кизатбаева\nДемид Метельников\nДильшат Сембаев", color=ft.Colors.BLACK87
+                ft.Text(
+                    "Это проект программы, помогающей составлять расписание для университетов.",
+                    color=ft.Colors.BLACK87,
                 )
             )
         else:
-            section_content.controls.append(
-                ft.Text(
-                    "Тут пока ещё пусто. :)", color=ft.Colors.BLACK87
-                )
-            )
+            section_content.controls.append(ft.Text("Тут пока ещё пусто. :)", color=ft.Colors.BLACK87))
         page.update()
 
+    # ---------------------- Overview (summary + filters + classes table) ----------------------
     def show_overview():
         section_content.controls.clear()
+
         if not state.get("buildings"):
             section_content.controls.append(
                 ft.Text(
@@ -106,98 +106,192 @@ def main_page(page: ft.Page):
             page.update()
             return
 
-        table1_rows = [
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text(z["id"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["name"], color=ft.Colors.BLACK87)),
-                ]
-            )
-            for z in state["buildings"]
-        ]
-        table1_title = ft.Text("Корпуса", size=24, weight=ft.FontWeight.BOLD)
-        table1 = ft.DataTable(
-            columns=[ft.DataColumn(ft.Text("ID")), ft.DataColumn(ft.Text("Название корпуса"))],
-            rows=table1_rows,
+        # prepare mapping dicts
+        courses_by_code = {c["code"]: c for c in state["courses"]}
+        teachers_map = map_by_id(state["teachers"])
+        groups_map = map_by_id(state["groups"])
+        rooms_map = {r["id"]: r for r in state["rooms"]}
+        buildings_map = map_by_id(state["buildings"], id_field="id", name_field="name")
+        slots_map = {s["id"]: s for s in state["slots"]}
+
+        # initial filter values (None => no filter)
+        selected_day: Optional[str] = None
+        selected_teacher: Optional[str] = None
+        selected_group: Optional[str] = None
+        selected_building: Optional[str] = None
+
+        # UI controls
+        def make_days_options():
+            days = []
+            seen = set()
+            for s in state["slots"]:
+                if s["day"] not in seen:
+                    days.append(s["day"])
+                    seen.add(s["day"])
+            return ["(все)"] + days
+
+        day_dropdown = ft.Dropdown(
+            label="День",
+            width=200,
+            options=[ft.dropdown.Option(opt) for opt in make_days_options()],
+            value="(все)",
+        )
+
+        teacher_dropdown = ft.Dropdown(
+            label="Преподаватель",
+            width=300,
+            options=[ft.dropdown.Option("(все)")] + [ft.dropdown.Option(t["id"], text=t["name"]) for t in state["teachers"]],
+            value="(все)",
+        )
+
+        group_dropdown = ft.Dropdown(
+            label="Группа",
+            width=250,
+            options=[ft.dropdown.Option("(все)")] + [ft.dropdown.Option(g["id"], text=g["name"]) for g in state["groups"]],
+            value="(все)",
+        )
+
+        building_dropdown = ft.Dropdown(
+            label="Корпус",
+            width=250,
+            options=[ft.dropdown.Option("(все)")] + [ft.dropdown.Option(b["id"], text=b["name"]) for b in state["buildings"]],
+            value="(все)",
+        )
+
+        clear_button = ft.ElevatedButton("Сбросить фильтры", on_click=lambda e: on_clear())
+
+        # table for classes
+        classes_table = ft.DataTable(
+            columns=[
+                ft.DataColumn(ft.Text("ID")),
+                ft.DataColumn(ft.Text("Дисциплина")),
+                ft.DataColumn(ft.Text("Группа")),
+                ft.DataColumn(ft.Text("Преподаватель")),
+                ft.DataColumn(ft.Text("День / Время")),
+                ft.DataColumn(ft.Text("Аудитория")),
+                ft.DataColumn(ft.Text("Корпус")),
+            ],
+            rows=[],
             border=ft.border.all(1, ft.Colors.BLACK12),
             heading_row_color="#358FC1",
-            heading_text_style=ft.TextStyle(
-                weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE
-            ),
+            heading_text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            expand=True,
         )
-        table2_title = ft.Text("Аудитории", size=24, weight=ft.FontWeight.BOLD)
-        table2_rows = [
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text(z["id"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["building_id"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["name"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["capacity"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["features"], color=ft.Colors.BLACK87)),
-                ]
-            )
-            for z in state["rooms"]
-        ]
-        table2 = ft.DataTable(
-            columns=[ft.DataColumn(ft.Text("ID")), ft.DataColumn(ft.Text("Корпус")), ft.DataColumn(ft.Text("Номер")), ft.DataColumn(ft.Text("Вместимость")), ft.DataColumn(ft.Text("Дополнительные условия"))],
-            rows=table2_rows,
-            border=ft.border.all(1, ft.Colors.BLACK12),
-            heading_row_color="#358FC1",
-            heading_text_style=ft.TextStyle(
-                weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE
-            ),
+
+        def build_classes_rows(filtered_classes):
+            rows = []
+            for cl in filtered_classes:
+                course = courses_by_code.get(cl["course_id"], {"title": cl["course_id"]})
+                slot = slots_map.get(cl["slot_id"], None)
+                slot_text = f"{slot['day']} {slot['start']}-{slot['end']}" if slot else ""
+                room = rooms_map.get(cl["room_id"], None)
+                building_name = buildings_map.get(room["building_id"], "") if room else ""
+                teacher_name = teachers_map.get(cl["teacher_id"], "")
+                group_name = groups_map.get(cl["group_id"], "")
+                rows.append(
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text(cl["id"], color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(course.get("title", cl["course_id"]), color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(group_name, color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(teacher_name, color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(slot_text, color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(room["name"] if room else "", color=ft.Colors.BLACK87)),
+                            ft.DataCell(ft.Text(building_name, color=ft.Colors.BLACK87)),
+                        ]
+                    )
+                )
+            return rows
+
+        # filtering logic
+        def apply_filters():
+            nonlocal classes_table
+            filtered = state["classes"]
+
+            # day filter
+            if day_dropdown.value and day_dropdown.value != "(все)":
+                target_day = day_dropdown.value
+                # find slot ids for that day
+                slot_ids = {s["id"] for s in state["slots"] if s["day"] == target_day}
+                filtered = [c for c in filtered if c["slot_id"] in slot_ids]
+
+            # teacher filter
+            if teacher_dropdown.value and teacher_dropdown.value != "(все)":
+                tid = teacher_dropdown.value
+                filtered = [c for c in filtered if c["teacher_id"] == tid]
+
+            # group filter
+            if group_dropdown.value and group_dropdown.value != "(все)":
+                gid = group_dropdown.value
+                filtered = [c for c in filtered if c["group_id"] == gid]
+
+            # building filter -> need rooms in building
+            if building_dropdown.value and building_dropdown.value != "(все)":
+                bid = building_dropdown.value
+                room_ids = {r["id"] for r in state["rooms"] if r["building_id"] == bid}
+                filtered = [c for c in filtered if c["room_id"] in room_ids]
+
+            # rebuild table rows
+            classes_table.rows = build_classes_rows(filtered)
+            page.update()
+
+        def on_clear():
+            day_dropdown.value = "(все)"
+            teacher_dropdown.value = "(все)"
+            group_dropdown.value = "(все)"
+            building_dropdown.value = "(все)"
+            apply_filters()
+
+        # attach handlers
+        def dropdown_changed(e):
+            apply_filters()
+
+        day_dropdown.on_change = dropdown_changed
+        teacher_dropdown.on_change = dropdown_changed
+        group_dropdown.on_change = dropdown_changed
+        building_dropdown.on_change = dropdown_changed
+
+        # initial fill
+        apply_filters()
+
+        # assemble UI
+        filters_row = ft.Row(
+            [
+                day_dropdown,
+                teacher_dropdown,
+                group_dropdown,
+                building_dropdown,
+                clear_button,
+            ],
+            alignment=ft.MainAxisAlignment.START,
+            spacing=10,
         )
-        table3_title = ft.Text("Преподаватели", size=24, weight=ft.FontWeight.BOLD)
-        table3_rows = [
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text(z["id"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["name"], color=ft.Colors.BLACK87)),
-                    ft.DataCell(ft.Text(z["dept"], color=ft.Colors.BLACK87)),
-                ]
-            )
-            for z in state["teachers"]
-        ]
-        table3 = ft.DataTable(
-            columns=[ft.DataColumn(ft.Text("ID")), ft.DataColumn(ft.Text("Имя")), ft.DataColumn(ft.Text("Кафедра"))],
-            rows=table3_rows,
-            border=ft.border.all(1, ft.Colors.BLACK12),
-            heading_row_color="#358FC1",
-            heading_text_style=ft.TextStyle(
-                weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE
-            ),
-        )
-        section_content.controls.append(table1_title); section_content.controls.append(table1); section_content.controls.append(table2_title); section_content.controls.append(table2); section_content.controls.append(table3_title); section_content.controls.append(table3)
+
+        section_content.controls.append(ft.Text("Фильтры по предикатам", size=18, weight=ft.FontWeight.BOLD))
+        section_content.controls.append(filters_row)
+        section_content.controls.append(ft.Divider())
+        section_content.controls.append(classes_table)
         page.update()
 
+    # ---------------------- Data tab ----------------------
     def show_data_section():
         async def load_data(e):
             section_content.controls.clear()
-            section_content.controls.append(
-                ft.Text("Загрузка...", color=ft.Colors.BLACK87)
-            )
+            section_content.controls.append(ft.Text("Загрузка...", color=ft.Colors.BLACK87))
             page.update()
-
             try:
                 async with httpx.AsyncClient() as client:
-                    response = await client.post(f"{BACKEND_URL}/load_seed")
-                    result = response.json()
-                    r = await client.get(f"{BACKEND_URL}/data")
+                    await client.post(f"{BACKEND_URL}/load_seed", timeout=10.0)
+                    r = await client.get(f"{BACKEND_URL}/data", timeout=10.0)
                     data = r.json()
+                    # update global state
                     state.update(data)
-
                 section_content.controls.clear()
-                section_content.controls.append(
-                    ft.Text(
-                        "Данные успешно загружены!",
-                        color=ft.Colors.BLACK87,
-                    )
-                )
-            except Exception as e:
+                section_content.controls.append(ft.Text("Данные успешно загружены!", color=ft.Colors.GREEN))
+                section_content.controls.append(ft.ElevatedButton("Перейти на Overview", on_click=lambda e: switch_section("Overview")))
+            except Exception as ex:
                 section_content.controls.clear()
-                section_content.controls.append(
-                    ft.Text(f"Возникла ошикбка: {e}. Возможно, отсутствует соединение с сервером или данные некорректны.", color=ft.Colors.RED)
-                )
+                section_content.controls.append(ft.Text(f"Ошибка при загрузке данных: {ex}", color=ft.Colors.RED))
             page.update()
 
         section_content.controls.clear()
@@ -211,3 +305,16 @@ def main_page(page: ft.Page):
                 on_click=load_data,
             )
         )
+        page.update()
+
+    # initially render
+    update_section()
+
+
+# entrypoint for flet
+def main(page: ft.Page):
+    main_page(page)
+
+
+if __name__ == "__main__":
+    ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8550)
