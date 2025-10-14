@@ -1,4 +1,3 @@
-import pytest
 from core.domain import Class, Group, Room
 from core.transforms import add_class, assign_room, assign_slot, map_groups, total_room_capacity
 

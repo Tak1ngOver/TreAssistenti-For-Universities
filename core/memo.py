@@ -1,3 +1,5 @@
+#Продвинутая рекурсия и мемоизация.
+#Авторы: Дильшат Сембаев, Демид Метельников.
 from functools import lru_cache
 from core.domain import *
 import time

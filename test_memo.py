@@ -1,5 +1,3 @@
-import pytest
-import time
 from core.domain import *
 from core.memo import *
 

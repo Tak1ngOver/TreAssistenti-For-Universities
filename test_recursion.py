@@ -1,4 +1,3 @@
-import pytest
 from core.domain import *
 from core.recursion import *
 
