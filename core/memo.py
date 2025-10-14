@@ -72,3 +72,4 @@ def measure_cache_performance():
 
     print(f"Первый вызов: {t1:.3f} ms")
     print(f"Второй (из кэша): {t2:.3f} ms")
+    return t1, t2

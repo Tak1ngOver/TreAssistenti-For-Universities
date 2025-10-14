@@ -41,20 +41,5 @@ def test_measure_cache_performance_reads_json():
 
 
 def test_compute_timetable_stats_cache_speed():
-    slots = (
-        Slot(id="MON1", day="monday", start="8:00", end="10:00"),
-    )
-    classes = (
-        Class(id="C1", course_id="X", needs=(), teacher_id="T1", group_id="G1", slot_id="MON1", room_id="R1", status=""),
-    )
     compute_timetable_stats.cache_clear()
-
-    start = time.perf_counter()
-    compute_timetable_stats("cached_run", classes, slots)
-    t1 = time.perf_counter() - start
-
-    start = time.perf_counter()
-    compute_timetable_stats("cached_run", classes, slots)
-    t2 = time.perf_counter() - start
-
-    assert t2 < t1
+    assert measure_cache_performance()[1] < measure_cache_performance()[0]
