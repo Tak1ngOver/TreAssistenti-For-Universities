@@ -1,4 +1,4 @@
-from domain import Class, Slot, Room
+from core.domain import Class, Slot, Room
 
 #Замыкания-предикаты
 
@@ -51,7 +51,6 @@ def find_conflicts_recursive(classes: tuple[Class, ...], slots: tuple[Slot, ...]
         and first.room_id == current.room_id
         and first.room_id != ""
         and first.slot_id != ""
-        and slot1.day_id == slot2.day_id
         and slot1.start == slot2.start
         and slot1.end == slot2.end
     )
