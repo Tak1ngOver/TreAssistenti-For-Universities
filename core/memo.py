@@ -28,6 +28,7 @@ def compute_timetable_stats(
             if (
                 other.group_id == head.group_id
                 or other.teacher_id == head.teacher_id
+                or other.room_id == head.room_id
             ):
                 conflicts += 1
 
