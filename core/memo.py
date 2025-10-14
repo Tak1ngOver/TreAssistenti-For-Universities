@@ -56,11 +56,7 @@ def compute_timetable_stats(
     return (("conflicts", total_conflicts), ("windows", total_windows))
 
 def measure_cache_performance():
-<<<<<<< HEAD
     with open("./data/seed.json", "r", encoding="utf-8") as f:
-=======
-    with open("seed.json", "r", encoding="utf-8") as f:
->>>>>>> f6672897c75a3093ac20eab5bb75785bcaf11dfd
         data = json.load(f)
 
     classes = tuple(Class(**c) for c in data["classes"])
