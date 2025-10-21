@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar, Union, Optional
  
@@ -78,6 +77,7 @@ class Left(Either[E, T]):
     error: E
  
     def map(self, func: Callable[[T], U]) -> "Either[E, U]":
+        return self  # игнорируем успешную трансформацию
  
     def bind(self, func: Callable[[T], "Either[E, U]"]) -> "Either[E, U]":
         return self  # остаёмся в ошибке
