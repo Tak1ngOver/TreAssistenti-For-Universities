@@ -1,11 +1,7 @@
 from core.domain import Room, Class, Group, Slot
 from core.ftypes import Maybe, Just, Nothing, Either, Right, Left, safe_room, validate_assignment
 
-# =====================
-
 # Тесты для Maybe / Just / Nothing
-
-# =====================
 
 def test_just_map():
     value = Just(5)
@@ -38,11 +34,7 @@ def test_nothing_get_or_else():
     nothing = Nothing()
     assert nothing.get_or_else("fallback") == "fallback"
 
-# =====================
-
 # Тесты для Either / Right / Left
-
-# =====================
 
 def test_right_map():
     r = Right(4)
@@ -76,11 +68,7 @@ def test_left_get_or_else():
     l = Left("error")
     assert l.get_or_else("fallback") == "fallback"
 
-# =====================
-
 # Тесты для safe_room
-
-# =====================
 
 def test_safe_room_found():
     room1 = Room(id="R01", building_id="B01", name="101", capacity=30, features=["projector"])
@@ -97,11 +85,7 @@ def test_safe_room_not_found():
     assert isinstance(result, Nothing)
     assert result.get_or_else("none") == "none"
 
-# =====================
-
 # Тесты для validate_assignment
-
-# =====================
 
 def make_base_entities():
     room = Room(id="R01", building_id="B01", name="101", capacity=40, features=["projector", "accessibility"])
