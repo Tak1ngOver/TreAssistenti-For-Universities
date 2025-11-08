@@ -24,7 +24,7 @@ class EventBus:
             new_state = h(event, new_state)
         return new_state
 
-def assign_slot(event: Event, state: dict) -> dict:
+def assign_slot(event: Event, state: dict):
     #Назначение слота для пары
     class_id = event.payload["class_id"]
     slot_id = event.payload["slot_id"]
@@ -40,7 +40,7 @@ def assign_slot(event: Event, state: dict) -> dict:
     return {**state, "classes": updated}
 
 
-def move_class(event: Event, state: dict) -> dict:
+def move_class(event: Event, state: dict):
     #Перемещение пары в другую аудитори
     class_id = event.payload["class_id"]
     room_id = event.payload["new_room"]
@@ -56,7 +56,7 @@ def move_class(event: Event, state: dict) -> dict:
     return {**state, "classes": updated}
 
 
-def cancel_class(event: Event, state: dict) -> dict:
+def cancel_class(event: Event, state: dict):
     #Отмена пары
     class_id = event.payload["class_id"]
     updated = []
@@ -70,7 +70,7 @@ def cancel_class(event: Event, state: dict) -> dict:
     return {**state, "classes": updated}
 
 
-def add_room(event: Event, state: dict) -> dict:
+def add_room(event: Event, state: dict):
     #Добавление новой аудитории
     new_room = event.payload
     rooms = list(state["rooms"])
