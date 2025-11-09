@@ -104,9 +104,9 @@
     ],
     "classes":[
         {"id":"PE1", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0105", "slot_id":"", "room_id":"R02", "status":""},        
-        {"id":"PE1", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0105", "slot_id":"", "room_id":"R02", "status":""},        
-        {"id":"PE1", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0608", "slot_id":"", "room_id":"R02", "status":""},        
-        {"id":"PE1", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0608", "slot_id":"", "room_id":"R02", "status":""},        
+        {"id":"PE2", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0105", "slot_id":"", "room_id":"R02", "status":""},        
+        {"id":"PE3", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0608", "slot_id":"", "room_id":"R02", "status":""},        
+        {"id":"PE4", "course_id":"PE101", "needs":"gym", "teacher_id":"T01", "group_id":"G0608", "slot_id":"", "room_id":"R02", "status":""},        
         
         
         {"id":"ECON_LEC1", "course_id":"EC101", "needs":"lectorium", "teacher_id":"T12", "group_id":"G0105", "slot_id":"MON1", "room_id":"", "status":""},

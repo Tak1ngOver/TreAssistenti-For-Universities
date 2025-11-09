@@ -239,22 +239,57 @@ def main_page(page: ft.Page):
                 state["classes"] = list(transforms.serialize_tuple(new_classes))
                 show_overview()
 
-        def add_new_class():           
+        def add_new_class():
+            def get_options(mahkey):
+                options = []
+                for el in state[mahkey]:
+                    options.append(
+                    ft.DropdownOption(key=el["id"])
+                    )
+                return options           
             section_content.controls.clear()
             cls_id = ft.TextField(label="Идентификатор занятия")
             cls_course = ft.TextField(label="Идентификатор дисциплины")
-            cls_status = ft.AutoComplete(suggestions = [
-                ft.AutoCompleteSuggestion(key="planned запланировано план", value="planned"),
-                ft.AutoCompleteSuggestion(key="scheduled по расписанию", value="scheduled"),
-                ft.AutoCompleteSuggestion(key="cancelled отменено отмена", value="cancelled"),
-                ], 
-                on_select=lambda e: print(e.selection),
+            cls_status = ft.Dropdown(
+                editable=True,
+                enable_filter=True,
+                label="Статус",
+                options=[
+                    ft.DropdownOption(key="scheduled"),
+                    ft.DropdownOption(key="cancelled"),
+                    ft.DropdownOption(key="planned")]
             )
 
-            cls_teacher = ft.TextField(label="Идентификатор преподавателя")
-            cls_group = ft.TextField(label="Идентификатор учебной группы")
-            cls_slot = ft.TextField(label="Идентификатор слота")
-            cls_room = ft.TextField(label="Идентификатор аудитории")
+            cls_teacher = ft.Dropdown(
+                editable=True,
+                enable_filter=True,
+                menu_height=250,
+                width=250,
+                label="Преподаватель",
+                options=get_options("teachers")
+            )
+            cls_group = ft.Dropdown(
+                editable=True,
+                enable_filter=True,
+                menu_height=250,
+                label="Группа",
+                options=get_options("groups")
+            )
+            cls_slot = ft.Dropdown(
+                editable=True,
+                enable_filter=True,
+                menu_height=250,
+                label="Слот",
+                options=get_options("slots")
+            )
+            cls_room = ft.Dropdown(
+                editable=True,
+                enable_filter=True,
+                menu_height=250,
+                width=200,
+                label="Аудитория",
+                options=get_options("rooms")
+            )
             back_button = ft.ElevatedButton("Назад", on_click=lambda _: show_overview())
             submit_button = ft.ElevatedButton("Продолжить", on_click=lambda _: tryadd_new_class())
 
@@ -265,7 +300,6 @@ def main_page(page: ft.Page):
             section_content.controls.append(cls_group)
             section_content.controls.append(cls_slot)
             section_content.controls.append(cls_room)
-            section_content.controls.append(ft.Text("Статус занятия"))
             section_content.controls.append(cls_status)
             section_content.controls.append(submit_button)
             section_content.controls.append(back_button)
@@ -295,7 +329,7 @@ def main_page(page: ft.Page):
                                 group_id = cls_group.value,
                                 slot_id = cls_slot.value,
                                 room_id = cls_room.value,
-                                status = cls_status.suggestions[cls_status.selected_index].value)
+                                status = cls_status.value)
                  new_classes = transforms.add_class(state["classes"], new_c)
                  state["classes"] = list(transforms.serialize_tuple(new_classes))
                  show_overview()
