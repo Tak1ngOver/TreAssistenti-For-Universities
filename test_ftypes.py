@@ -87,12 +87,6 @@ def test_safe_room_not_found():
 
 # Тесты для validate_assignment
 
-def make_base_entities():
-    room = Room(id="R01", building_id="B01", name="101", capacity=40, features=["projector", "accessibility"])
-    group = Group(id="G01", name="Юристы 1", size=30, track="Юриспруденция")
-    slot = Slot(id="MON1", day="monday", start="8:00", end="10:00")
-    return room, group, slot
-
 def test_validate_assignment_all_correct():
     room = Room(id="R01", building_id="B01", name="101", capacity=40, features=["projector", "accessibility"])
     group = Group(id="G01", name="Юристы 1", size=30, track="Юриспруденция")

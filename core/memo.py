@@ -1,6 +1,7 @@
 #Продвинутая рекурсия и мемоизация.
 #Авторы: Дильшат Сембаев, Демид Метельников.
 from functools import lru_cache
+from core.transforms import *
 from core.domain import *
 import time
 import json
@@ -14,7 +15,6 @@ def compute_timetable_stats(
     # Базовый случай
     if not classes_index:
         return (("conflicts", 0), ("windows", 0))
-
     head = classes_index[0]
     tail = classes_index[1:]
 

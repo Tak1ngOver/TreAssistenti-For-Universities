@@ -54,6 +54,14 @@ async def get_data():
     }
 
 
+@app.post("/total_room_capacity")
+async def get_capacity():
+    result = transforms.total_room_capacity(state["rooms"])
+    return {
+        "total_capacity": result
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app=app)
