@@ -31,7 +31,7 @@ def load_seed(path: str) -> tuple[
     return buildings, rooms, teachers, groups, courses, slots, classes, constraints
 
 def add_class(classes: tuple[Class,...], c: Class) -> tuple[Class,...]:
-    if not isinstance(classes[0], Class):
+    if classes and not isinstance(classes[0], Class):
         classes = to_tuple(Class, classes)
     if not isinstance(c, Class):
         c = Class(**c)

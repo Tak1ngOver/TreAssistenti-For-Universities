@@ -48,11 +48,13 @@ def find_conflicts_recursive(classes: tuple[Class, ...], slots: tuple[Slot, ...]
         if slot1.id == first.slot_id
         for slot2 in slots
         if slot2.id == current.slot_id
-        and first.room_id == current.room_id
-        and first.room_id != ""
+        and ((first.room_id == current.room_id
+        and first.room_id != "")
+        or first.teacher_id == current.teacher_id 
+        and first.teacher_id != "")
         and first.slot_id != ""
         and slot1.start == slot2.start
-        and slot1.end == slot2.end
+        and slot1.end == slot2.end    
     )
 
     return current_conflicts + find_conflicts_recursive(rest, slots)

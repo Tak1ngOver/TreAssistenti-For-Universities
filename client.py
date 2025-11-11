@@ -135,9 +135,18 @@ def main_page(page: ft.Page):
             def get_options(mahkey):
                 options = []
                 for el in state[mahkey]:
-                    options.append(
-                    ft.DropdownOption(key=el["id"])
-                    )
+                    if mahkey == "rooms" or mahkey == "teachers" or mahkey == "groups":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["name"])
+                        )
+                    elif mahkey == "courses":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["title"])
+                        )
+                    else:
+                        options.append(
+                        ft.DropdownOption(key=el["id"])
+                        )
                 return options
             section_content.controls.clear()
             cls_select = ft.Dropdown(
@@ -189,9 +198,18 @@ def main_page(page: ft.Page):
             def get_options(mahkey):
                 options = []
                 for el in state[mahkey]:
-                    options.append(
-                    ft.DropdownOption(key=el["id"])
-                    )
+                    if mahkey == "rooms" or mahkey == "teachers" or mahkey == "groups":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["name"])
+                        )
+                    elif mahkey == "courses":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["title"])
+                        )
+                    else:
+                        options.append(
+                        ft.DropdownOption(key=el["id"])
+                        )
                 return options
             section_content.controls.clear()
             cls_select = ft.Dropdown(
@@ -243,9 +261,18 @@ def main_page(page: ft.Page):
             def get_options(mahkey):
                 options = []
                 for el in state[mahkey]:
-                    options.append(
-                    ft.DropdownOption(key=el["id"])
-                    )
+                    if mahkey == "rooms" or mahkey == "teachers" or mahkey == "groups":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["name"])
+                        )
+                    elif mahkey == "courses":
+                        options.append(
+                        ft.DropdownOption(key=el["id"], text=el["title"])
+                        )
+                    else:
+                        options.append(
+                        ft.DropdownOption(key=el["id"])
+                        )
                 return options           
             section_content.controls.clear()
             cls_id = ft.TextField(label="Идентификатор занятия")
