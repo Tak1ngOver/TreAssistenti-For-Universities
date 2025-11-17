@@ -5,6 +5,7 @@ from typing import Optional
 
 from core import transforms, memo
 from core.domain import *
+from core.frp import *
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -32,6 +33,11 @@ MENU_ICONS = [
 
 state = {}  # тут будут ключи: buildings, rooms, teachers, groups, courses, slots, classes, constraints
 
+bus = EventBus()
+bus.subscribe("ASSIGN_SLOT", assign_slot)
+bus.subscribe("MOVE_CLASS", move_class)
+bus.subscribe("CANCEL_CLASS", cancel_class)
+bus.subscribe("ADD_ROOM", add_room)
 
 def main_page(page: ft.Page):
     page.title = "Планировщик — Расписание"
@@ -92,6 +98,8 @@ def main_page(page: ft.Page):
             )
         elif section_name.value == "Pipelines":
             show_pipelines_section()
+        elif section_name.value == "Async/FRP":
+            show_async_frp_section()
         else:
             section_content.controls.append(ft.Text("Тут пока ещё пусто. :)", color=ft.Colors.BLACK87))
         page.update()
@@ -597,10 +605,127 @@ def main_page(page: ft.Page):
             section_content.controls.append(ft.Text(f"Время первого прохода: {r1}\nВремя второго прохода (с кешем): {r2}"))
             page.update()
 
+    # Async/FRP
+    def show_async_frp_section():
+        section_content.controls.clear()
+        section_content.controls.append(ft.Text("FRP: Мини-шина событий", size=18, weight=ft.FontWeight.BOLD))
+
+        def create_dropdown(label, items, width=300, text_func=None):
+            options = [
+                ft.dropdown.Option(item["id"], text=text_func(item) if text_func else item["id"])
+                for item in items
+            ]
+            return ft.Dropdown(label=label, width=width, options=options)
+
+        def publish_event_safe(event_name, payload):
+            new_state = bus.publish(event_name, payload, dict(state))
+            state.update(new_state)
+            room_table.rows = build_room_table_rows()
+            page.update()
+
+        # ASSIGN_SLOT
+        section_content.controls.append(ft.Text("Назначить слот занятию (ASSIGN_SLOT)"))
+        assign_class_dropdown = create_dropdown("Выберите занятие", state["classes"])
+        assign_slot_dropdown = create_dropdown(
+            "Выберите слот", state["slots"], text_func=lambda s: f"{s['day']} {s['start']}-{s['end']}"
+        )
+        assign_slot_button = ft.ElevatedButton(
+            "Назначить слот",
+            on_click=lambda e: publish_event_safe(
+                "ASSIGN_SLOT",
+                {"class_id": assign_class_dropdown.value, "slot_id": assign_slot_dropdown.value},
+            ),
+        )
+        section_content.controls.extend([assign_class_dropdown, assign_slot_dropdown, assign_slot_button, ft.Divider()])
+
+        # MOVE_CLASS
+        section_content.controls.append(ft.Text("Переместить занятие в другую аудиторию (MOVE_CLASS)"))
+        move_class_dropdown = create_dropdown("Выберите занятие", state["classes"])
+        move_room_dropdown = create_dropdown(
+            "Выберите аудиторию",
+            state["rooms"],
+            text_func=lambda r: f"{r['name']} ({next(b['name'] for b in state['buildings'] if b['id']==r['building_id'])})"
+        )
+        move_class_button = ft.ElevatedButton(
+            "Переместить занятие",
+            on_click=lambda e: publish_event_safe(
+                "MOVE_CLASS",
+                {"class_id": move_class_dropdown.value, "new_room": move_room_dropdown.value},
+            ),
+        )
+        section_content.controls.extend([move_class_dropdown, move_room_dropdown, move_class_button, ft.Divider()])
+
+        # CANCEL_CLASS
+        section_content.controls.append(ft.Text("Отменить занятие (CANCEL_CLASS)"))
+        cancel_class_dropdown = create_dropdown("Выберите занятие", state["classes"])
+        cancel_class_button = ft.ElevatedButton(
+            "Отменить занятие",
+            on_click=lambda e: publish_event_safe("CANCEL_CLASS", {"class_id": cancel_class_dropdown.value}),
+        )
+        section_content.controls.extend([cancel_class_dropdown, cancel_class_button, ft.Divider()])
+
+        # ADD_ROOM
+        section_content.controls.append(ft.Text("Добавить аудиторию (ADD_ROOM)"))
+        room_id_field = ft.TextField(label="ID аудитории", width=200)
+        room_name_field = ft.TextField(label="Название аудитории", width=300)
+        room_building_dropdown = create_dropdown("Корпус", state["buildings"], text_func=lambda b: b["name"])
+        room_capacity_field = ft.TextField(label="Вместимость", width=120)
+
+        def add_room_action():
+            capacity = int(room_capacity_field.value)
+            payload = {
+                "id": room_id_field.value,
+                "name": room_name_field.value,
+                "building_id": room_building_dropdown.value,
+                "capacity": capacity,
+                "features": [],
+            }
+            publish_event_safe("ADD_ROOM", payload)
+
+        add_room_button = ft.ElevatedButton("Добавить аудиторию", on_click=lambda e: add_room_action())
+        section_content.controls.extend([room_id_field, room_name_field, room_building_dropdown, room_capacity_field, add_room_button, ft.Divider()])
+
+        # Таблица аудиторий
+        section_content.controls.append(ft.Text("Занятость аудиторий", size=16, weight=ft.FontWeight.BOLD))
+        room_table = ft.DataTable(
+            columns=[
+                ft.DataColumn(ft.Text("Аудитория")),
+                ft.DataColumn(ft.Text("Корпус")),
+                ft.DataColumn(ft.Text("Вместимость")),
+                ft.DataColumn(ft.Text("Статус")),
+            ],
+            rows=[],
+            border=ft.border.all(1, ft.Colors.BLACK12),
+            expand=True,
+        )
+        section_content.controls.append(room_table)
+
+        def build_room_table_rows():
+            rows = []
+            for room in state["rooms"]:
+                building_name = next((b["name"] for b in state["buildings"] if b["id"] == room["building_id"]), "")
+                scheduled_classes = [
+                    f"{c['id']} ({c.get('status','')})"
+                    for c in state["classes"]
+                    if c.get("room_id") == room["id"] and c.get("status") in ("scheduled", "moved")
+                ]
+                rows.append(
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text(room["name"])),
+                            ft.DataCell(ft.Text(building_name)),
+                            ft.DataCell(ft.Text(str(room.get("capacity", 0)))),
+                            ft.DataCell(ft.Text(", ".join(scheduled_classes) if scheduled_classes else "Свободно")),
+                        ]
+                    )
+                )
+            return rows
+
+        room_table.rows = build_room_table_rows()
+        page.update()
 
     # initially render
     update_section()
-
 
 # entrypoint for flet
 def main(page: ft.Page):
