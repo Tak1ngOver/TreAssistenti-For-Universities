@@ -6,6 +6,7 @@ from typing import Optional
 from core import transforms, memo
 from core.domain import *
 from core.frp import *
+from core import service as svc
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -100,6 +101,8 @@ def main_page(page: ft.Page):
             show_pipelines_section()
         elif section_name.value == "Async/FRP":
             show_async_frp_section()
+        elif section_name.value == "Reports":
+            show_reports_section()
         else:
             section_content.controls.append(ft.Text("Тут пока ещё пусто. :)", color=ft.Colors.BLACK87))
         page.update()
@@ -722,6 +725,69 @@ def main_page(page: ft.Page):
             return rows
 
         room_table.rows = build_room_table_rows()
+        page.update()
+
+    def show_reports_section():
+        section_content.controls.clear()
+        
+        day_input = ft.Dropdown(
+            label="День",
+            width=200,
+            options=[
+                ft.dropdown.Option("monday", text="Понедельник"),
+                ft.dropdown.Option("tuesday", text="Вторник"),
+                ft.dropdown.Option("wednesday", text="Среда"),
+                ft.dropdown.Option("thursday", text="Четверг"),
+                ft.dropdown.Option("friday", text="Пятница"),
+                ft.dropdown.Option("saturday", text="Суббота"),
+                ft.dropdown.Option("sunday", text="Воскресенье")
+            ],
+            value="monday"
+        )
+        out_area = ft.Column()
+
+        def run_day(e):
+            validators = {"validate_day": svc.validate_day}
+            selectors = {
+                "select_slots_for_day": svc.select_slots_for_day,
+                "select_classes_for_slots": svc.select_classes_for_slots,
+            }
+            calculators = {"enrich_classes": svc.enrich_classes, "summarize_day": svc.summarize_day}
+            data = {
+                "slots": state.get("slots", ()),
+                "classes": state.get("classes", ()),
+                "rooms": state.get("rooms", ()),
+                "teachers": state.get("teachers", ()),
+                "courses": state.get("courses", ()),
+            }
+            service = svc.TimetableService(validators, selectors, calculators, data)
+
+            try:
+                report = service.build_day_report(day_input.value)
+            except Exception as ex:
+                out_area.controls.clear()
+                out_area.controls.append(ft.Text(f"Ошибка: {ex}", color=ft.Colors.RED))
+                page.update()
+                return
+
+            out_area.controls.clear()
+            out_area.controls.append(ft.Text(f"Отчёт за день: {report.day}", weight=ft.FontWeight.BOLD))
+            out_area.controls.append(ft.Divider())
+            for name, value in report.stages:
+                out_area.controls.append(ft.Text(f"Этап: {name}", weight=ft.FontWeight.BOLD))
+                if isinstance(value, (list, tuple)):
+                    out_area.controls.append(ft.Text(f"Items: {len(value)}"))
+                else:
+                    out_area.controls.append(ft.Text(str(value)))
+                out_area.controls.append(ft.Divider())
+            out_area.controls.append(ft.Text("Итог:"))
+            out_area.controls.append(ft.Text(str(report.summary)))
+            page.update()
+
+        section_content.controls.append(day_input)
+        section_content.controls.append(ft.ElevatedButton("Сформировать отчёт за день", on_click=run_day))
+        section_content.controls.append(ft.Divider())
+        section_content.controls.append(out_area)
         page.update()
 
     # initially render
