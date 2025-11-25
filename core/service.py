@@ -12,27 +12,14 @@ class DayReport:
     stages: Tuple[Any, ...]  # промежуточные результаты (для UI)
 
 class TimetableService:
-    """
-    Фасад (без бизнес-логики). Конструируется с набором чистых функций (DI).
-    validators: dict[str, Callable]
-    selectors: dict[str, Callable]
-    calculators: dict[str, Callable]
-
-    data: словарь исходных коллекций (slots, classes, rooms, teachers, groups, courses)
-    """
-
     def __init__(self, validators: Dict[str, Callable], selectors: Dict[str, Callable],
-                 calculators: Dict[str, Callable], data: Dict[str, Iterable]):
+                calculators: Dict[str, Callable], data: Dict[str, Iterable]):
         self.validators = validators
         self.selectors = selectors
         self.calculators = calculators
         self.data = data
 
     def build_day_report(self, day: str) -> DayReport:
-        """
-        Собирает DayReport как pipeline чистых функций.
-        Возвращаемые промежуточные значения собираются в stages (tuple).
-        """
         stages = []
 
         # 1. validate day
@@ -80,9 +67,6 @@ class TimetableService:
             stages=tuple(stages)
         )
         return report
-
-# ---- Примеры простых чистых функций, которые можно передать через DI ----
-# Эти функции сделаны чистыми и простыми, чтобы их легко тестировать и комбинировать.
 
 def validate_day(day: str) -> str:
     allowed = {"monday","tuesday","wednesday","thursday","friday"}
