@@ -766,7 +766,6 @@ def main_page(page: ft.Page):
 
         section_content.controls.append(ft.Text("Генерация отчёта за период", size=18, weight=ft.FontWeight.BOLD))
 
-        # period preset (week / month / custom)
         period_dropdown = ft.Dropdown(
             label="Период",
             width=220,
@@ -778,14 +777,12 @@ def main_page(page: ft.Page):
             value="week",
         )
 
-        # checkboxes for days (custom selection)
         day_checkboxes = {}
         for key, label in get_weekday_options():
             day_checkboxes[key] = ft.Checkbox(label=label, value=(key in ("monday", "tuesday", "wednesday", "thursday", "friday")))
 
         days_row = ft.Row([day_checkboxes[k] for k, _ in get_weekday_options()], wrap=True)
         
-        # Period buttons
         generate_button = ft.ElevatedButton("Сформировать отчёт за период", on_click=None)
         status_text = ft.Text("", color=ft.Colors.BLACK87)
         out_area = ft.Column()
@@ -795,9 +792,7 @@ def main_page(page: ft.Page):
             if kind == "week":
                 return ["monday", "tuesday", "wednesday", "thursday", "friday"]
             if kind == "month":
-                # for month we will run 4 weekly passes using the weekdays below
                 return ["monday", "tuesday", "wednesday", "thursday", "friday"]
-            # custom
             return [k for k, cb in day_checkboxes.items() if cb.value]
 
         async def run_period_report(e):
@@ -808,7 +803,6 @@ def main_page(page: ft.Page):
 
             kind = period_dropdown.value
 
-            # determine selected days
             if kind == "custom":
                 selected_days = [k for k, cb in day_checkboxes.items() if cb.value]
             else:
@@ -823,15 +817,12 @@ def main_page(page: ft.Page):
             try:
                 weeks_results = []
                 if kind == "month":
-                    # вызовем generate_period_report 4 раза — по одной итерации на каждую неделю месяца
-                    # это позволит получить отчёты и обновленные занятия для каждой из 4 недель
                     for week_index in range(4):
                         status_text.value = f"Генерация: неделя {week_index+1}..."
                         page.update()
                         week_result = await generate_period_report(selected_days, state.get("classes", ()), state.get("rooms", ()), state.get("slots", ()), state.get("groups", ()))
                         weeks_results.append(week_result)
                 else:
-                    # week or custom — одна итерация
                     single = await generate_period_report(selected_days, state.get("classes", ()), state.get("rooms", ()), state.get("slots", ()), state.get("groups", ()))
                     weeks_results.append(single)
             except Exception as ex:
@@ -840,28 +831,23 @@ def main_page(page: ft.Page):
                 page.update()
                 return
 
-            # Update global schedule: collect updated classes from all weeks
             updated_by_id: Dict[str, Any] = {}
             for week_res in weeks_results:
                 for day_res in week_res.get("days", []):
-                    for c in day_res.get("classes", ()):  # classes returned per day
+                    for c in day_res.get("classes", ()):
                         if hasattr(c, "__dict__") and not isinstance(c, dict):
                             updated_by_id[getattr(c, "id")] = c.__dict__
                         else:
                             updated_by_id[c["id"]] = c
 
-            # Merge updated classes with any existing classes that were not returned
             existing = {c["id"]: c for c in state.get("classes", [])}
             merged = dict(existing)
             merged.update(updated_by_id)
 
-            # Save back to state as list of dicts
             state["classes"] = list(merged.values())
 
-            # Render results
             out_area.controls.clear()
 
-            # For each week, render per-day reports
             for wi, week_res in enumerate(weeks_results):
                 out_area.controls.append(ft.Text(f"Отчёт за неделю {wi+1}", weight=ft.FontWeight.BOLD))
                 for day_res in week_res.get("days", []):
@@ -883,7 +869,6 @@ def main_page(page: ft.Page):
                         out_area.controls.append(ft.Text(f"    Неназначенные занятия (ids): {', '.join(rep.get('unassigned_ids'))}"))
                     out_area.controls.append(ft.Divider())
 
-            # Aggregated across all weeks
             total_agg = {
                 'total_days': 0,
                 'total_scheduled': 0,
@@ -912,10 +897,8 @@ def main_page(page: ft.Page):
             generate_button.disabled = False
             page.update()
 
-        # attach async handler (Flet supports async handlers)
         generate_button.on_click = run_period_report
 
-        # assemble UI
         controls = [
             ft.Row([period_dropdown]),
             ft.Text("Если выбран 'Выбор дней', отметьте дни вручную:"),
