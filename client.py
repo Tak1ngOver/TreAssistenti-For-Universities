@@ -1,12 +1,17 @@
 # client.py
+import asyncio
+import json
+from typing import Optional, List, Dict, Any
+
 import flet as ft
 import httpx
-from typing import Optional
 
 from core import transforms, memo
-from core.domain import *
-from core.frp import *
 from core import service as svc
+from core.domain import *
+from core.async_schedule import *
+from core.frp import *
+from core.transforms import *
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -39,6 +44,32 @@ bus.subscribe("ASSIGN_SLOT", assign_slot)
 bus.subscribe("MOVE_CLASS", move_class)
 bus.subscribe("CANCEL_CLASS", cancel_class)
 bus.subscribe("ADD_ROOM", add_room)
+
+def map_by_id(items, id_field="id", name_field="name"):
+    return {it[id_field]: it[name_field] for it in items}
+
+
+def get_weekday_options():
+    return [
+        ("monday", "Понедельник"),
+        ("tuesday", "Вторник"),
+        ("wednesday", "Среда"),
+        ("thursday", "Четверг"),
+        ("friday", "Пятница")
+    ]
+
+
+def ensure_loaded(page: ft.Page, section_content: ft.Column) -> bool:
+    if not state.get("buildings"):
+        section_content.controls.append(
+            ft.Text(
+                "Данные не загружены. Пожалуйста, перейдите на вкладку Data для загрузки данных.",
+                color=ft.Colors.BLACK87,
+            )
+        )
+        page.update()
+        return False
+    return True
 
 def main_page(page: ft.Page):
     page.title = "Планировщик — Расписание"
@@ -729,65 +760,172 @@ def main_page(page: ft.Page):
 
     def show_reports_section():
         section_content.controls.clear()
-        
-        day_input = ft.Dropdown(
-            label="День",
-            width=200,
+
+        if not ensure_loaded(page, section_content):
+            return
+
+        section_content.controls.append(ft.Text("Генерация отчёта за период", size=18, weight=ft.FontWeight.BOLD))
+
+        # period preset (week / month / custom)
+        period_dropdown = ft.Dropdown(
+            label="Период",
+            width=220,
             options=[
-                ft.dropdown.Option("monday", text="Понедельник"),
-                ft.dropdown.Option("tuesday", text="Вторник"),
-                ft.dropdown.Option("wednesday", text="Среда"),
-                ft.dropdown.Option("thursday", text="Четверг"),
-                ft.dropdown.Option("friday", text="Пятница"),
-                ft.dropdown.Option("saturday", text="Суббота"),
-                ft.dropdown.Option("sunday", text="Воскресенье")
+                ft.dropdown.Option("week", text="Неделя"),
+                ft.dropdown.Option("month", text="Месяц"),
+                ft.dropdown.Option("custom", text="Выбор дней"),
             ],
-            value="monday"
+            value="week",
         )
+
+        # checkboxes for days (custom selection)
+        day_checkboxes = {}
+        for key, label in get_weekday_options():
+            day_checkboxes[key] = ft.Checkbox(label=label, value=(key in ("monday", "tuesday", "wednesday", "thursday", "friday")))
+
+        days_row = ft.Row([day_checkboxes[k] for k, _ in get_weekday_options()], wrap=True)
+        
+        # Period buttons
+        generate_button = ft.ElevatedButton("Сформировать отчёт за период", on_click=None)
+        status_text = ft.Text("", color=ft.Colors.BLACK87)
         out_area = ft.Column()
 
-        def run_day(e):
-            validators = {"validate_day": svc.validate_day}
-            selectors = {
-                "select_slots_for_day": svc.select_slots_for_day,
-                "select_classes_for_slots": svc.select_classes_for_slots,
-            }
-            calculators = {"enrich_classes": svc.enrich_classes, "summarize_day": svc.summarize_day}
-            data = {
-                "slots": state.get("slots", ()),
-                "classes": state.get("classes", ()),
-                "rooms": state.get("rooms", ()),
-                "teachers": state.get("teachers", ()),
-                "courses": state.get("courses", ()),
-            }
-            service = svc.TimetableService(validators, selectors, calculators, data)
+        def build_days_list() -> List[str]:
+            kind = period_dropdown.value
+            if kind == "week":
+                return ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            if kind == "month":
+                # for month we will run 4 weekly passes using the weekdays below
+                return ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            # custom
+            return [k for k, cb in day_checkboxes.items() if cb.value]
 
-            try:
-                report = service.build_day_report(day_input.value)
-            except Exception as ex:
-                out_area.controls.clear()
-                out_area.controls.append(ft.Text(f"Ошибка: {ex}", color=ft.Colors.RED))
+        async def run_period_report(e):
+            generate_button.disabled = True
+            status_text.value = "Генерация..."
+            out_area.controls.clear()
+            page.update()
+
+            kind = period_dropdown.value
+
+            # determine selected days
+            if kind == "custom":
+                selected_days = [k for k, cb in day_checkboxes.items() if cb.value]
+            else:
+                selected_days = build_days_list()
+
+            if not selected_days:
+                status_text.value = "Ни один день не выбран."
+                generate_button.disabled = False
                 page.update()
                 return
 
-            out_area.controls.clear()
-            out_area.controls.append(ft.Text(f"Отчёт за день: {report.day}", weight=ft.FontWeight.BOLD))
-            out_area.controls.append(ft.Divider())
-            for name, value in report.stages:
-                out_area.controls.append(ft.Text(f"Этап: {name}", weight=ft.FontWeight.BOLD))
-                if isinstance(value, (list, tuple)):
-                    out_area.controls.append(ft.Text(f"Items: {len(value)}"))
+            try:
+                weeks_results = []
+                if kind == "month":
+                    # вызовем generate_period_report 4 раза — по одной итерации на каждую неделю месяца
+                    # это позволит получить отчёты и обновленные занятия для каждой из 4 недель
+                    for week_index in range(4):
+                        status_text.value = f"Генерация: неделя {week_index+1}..."
+                        page.update()
+                        week_result = await generate_period_report(selected_days, state.get("classes", ()), state.get("rooms", ()), state.get("slots", ()), state.get("groups", ()))
+                        weeks_results.append(week_result)
                 else:
-                    out_area.controls.append(ft.Text(str(value)))
-                out_area.controls.append(ft.Divider())
-            out_area.controls.append(ft.Text("Итог:"))
-            out_area.controls.append(ft.Text(str(report.summary)))
+                    # week or custom — одна итерация
+                    single = await generate_period_report(selected_days, state.get("classes", ()), state.get("rooms", ()), state.get("slots", ()), state.get("groups", ()))
+                    weeks_results.append(single)
+            except Exception as ex:
+                status_text.value = f"Ошибка при генерации: {ex}"
+                generate_button.disabled = False
+                page.update()
+                return
+
+            # Update global schedule: collect updated classes from all weeks
+            updated_by_id: Dict[str, Any] = {}
+            for week_res in weeks_results:
+                for day_res in week_res.get("days", []):
+                    for c in day_res.get("classes", ()):  # classes returned per day
+                        if hasattr(c, "__dict__") and not isinstance(c, dict):
+                            updated_by_id[getattr(c, "id")] = c.__dict__
+                        else:
+                            updated_by_id[c["id"]] = c
+
+            # Merge updated classes with any existing classes that were not returned
+            existing = {c["id"]: c for c in state.get("classes", [])}
+            merged = dict(existing)
+            merged.update(updated_by_id)
+
+            # Save back to state as list of dicts
+            state["classes"] = list(merged.values())
+
+            # Render results
+            out_area.controls.clear()
+
+            # For each week, render per-day reports
+            for wi, week_res in enumerate(weeks_results):
+                out_area.controls.append(ft.Text(f"Отчёт за неделю {wi+1}", weight=ft.FontWeight.BOLD))
+                for day_res in week_res.get("days", []):
+                    rep = day_res.get("report", {})
+                    out_area.controls.append(ft.Text(f"  День: {day_res.get('day')}", weight=ft.FontWeight.BOLD))
+                    out_area.controls.append(ft.Text(f"    Запланировано (slot_id present): {rep.get('scheduled_count')}"))
+                    out_area.controls.append(ft.Text(f"    Назначено в этом запуске: {rep.get('assigned_this_run')}"))
+                    out_area.controls.append(ft.Text(f"    Не назначено: {rep.get('unscheduled_count')}"))
+                    out_area.controls.append(ft.Text(f"    Коллизий: {len(rep.get('collisions', []))}"))
+                    if rep.get('collisions'):
+                        for coll in rep.get('collisions', []):
+                            if coll.get('type') == 'room_conflict':
+                                out_area.controls.append(ft.Text(f"      Конфликт аудитории {coll.get('room_id')}: {coll.get('classes')}"))
+                            else:
+                                out_area.controls.append(ft.Text(f"      Конфликт преподавателя {coll.get('teacher_id')}: {coll.get('classes')}"))
+                    if rep.get('assigned_ids'):
+                        out_area.controls.append(ft.Text(f"    Назначенные занятия (ids): {', '.join(rep.get('assigned_ids'))}"))
+                    if rep.get('unassigned_ids'):
+                        out_area.controls.append(ft.Text(f"    Неназначенные занятия (ids): {', '.join(rep.get('unassigned_ids'))}"))
+                    out_area.controls.append(ft.Divider())
+
+            # Aggregated across all weeks
+            total_agg = {
+                'total_days': 0,
+                'total_scheduled': 0,
+                'total_assigned_this_run': 0,
+                'total_unscheduled': 0,
+                'total_collisions': 0,
+            }
+            for week_res in weeks_results:
+                agg = week_res.get('aggregated', {})
+                total_agg['total_days'] += agg.get('total_days', 0)
+                total_agg['total_scheduled'] += agg.get('total_scheduled', 0)
+                total_agg['total_assigned_this_run'] += agg.get('total_assigned_this_run', 0)
+                total_agg['total_unscheduled'] += agg.get('total_unscheduled', 0)
+                total_agg['total_collisions'] += agg.get('total_collisions', 0)
+
+            out_area.controls.append(ft.Text("Итоговый сводный отчёт:", weight=ft.FontWeight.BOLD))
+            out_area.controls.append(ft.Text(f"  Всего недель: {len(weeks_results)}"))
+            out_area.controls.append(ft.Text(f"  Всего дней: {total_agg.get('total_days')}"))
+            out_area.controls.append(ft.Text(f"  Всего запланировано: {total_agg.get('total_scheduled')}"))
+            out_area.controls.append(ft.Text(f"  Всего назначено: {total_agg.get('total_assigned_this_run')}"))
+            out_area.controls.append(ft.Text(f"  Всего не назначено: {total_agg.get('total_unscheduled')}"))
+            out_area.controls.append(ft.Text(f"  Всего коллизий: {total_agg.get('total_collisions')}"))
+            out_area.controls.append(ft.Divider())
+
+            status_text.value = "Готово."
+            generate_button.disabled = False
             page.update()
 
-        section_content.controls.append(day_input)
-        section_content.controls.append(ft.ElevatedButton("Сформировать отчёт за день", on_click=run_day))
-        section_content.controls.append(ft.Divider())
-        section_content.controls.append(out_area)
+        # attach async handler (Flet supports async handlers)
+        generate_button.on_click = run_period_report
+
+        # assemble UI
+        controls = [
+            ft.Row([period_dropdown]),
+            ft.Text("Если выбран 'Выбор дней', отметьте дни вручную:"),
+            days_row,
+            ft.Row([generate_button, status_text]),
+            ft.Divider(),
+            out_area,
+        ]
+        for c in controls:
+            section_content.controls.append(c)
         page.update()
 
     # initially render
